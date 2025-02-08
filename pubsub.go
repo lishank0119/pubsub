@@ -1,65 +1,65 @@
 package pubsub
 
 import (
-	"sync"
+	"fmt"
+	"hash/fnv"
 )
 
 type PubSub struct {
-	mu     sync.RWMutex
-	topics map[string]map[*Subscriber]struct{}
+	buckets []*bucket
 }
 
-func NewPubSub() *PubSub {
+func NewPubSub(config *Config) *PubSub {
+	if config == nil {
+		config = new(Config)
+	}
+	config.init()
+
+	buckets := make([]*bucket, 0)
+
+	for i := 0; i < config.BucketNum; i++ {
+		buckets = append(buckets, newBucket(config.BucketMessageBuffer))
+	}
+
 	return &PubSub{
-		topics: make(map[string]map[*Subscriber]struct{}),
+		buckets: buckets,
 	}
 }
 
-// NewSubscriber creates a new Subscriber associated with the given PubSub instance.
-// The messageBuffer parameter defines the buffer size for the subscriber's message channel.
-// If the provided messageBuffer is less than 256, it defaults to 256 to ensure efficient handling.
-func (ps *PubSub) NewSubscriber(messageBuffer int) *Subscriber {
-	return newSubscriber(ps, messageBuffer)
+func (ps *PubSub) getBucket(topic string) *bucket {
+	h := fnv.New32a()
+	if _, err := h.Write([]byte(fmt.Sprintf("%v", topic))); err != nil {
+		panic(fmt.Sprintf("unexpected error hashing key: %v", err))
+	}
+	i := int(h.Sum32()) % len(ps.buckets)
+	return ps.buckets[i]
+}
+
+func (ps *PubSub) NewSubscriber() *Subscriber {
+	return newSubscriber(ps)
 }
 
 // Publish a message to a topic
-func (ps *PubSub) Publish(topic string, msg []byte) {
-	ps.mu.RLock()
-	defer ps.mu.RUnlock()
-
-	if subs, ok := ps.topics[topic]; ok {
-		for sub := range subs {
-			sub.sendMessage(message{topic: topic, data: msg})
-		}
-	}
+func (ps *PubSub) Publish(topic string, msg []byte) error {
+	b := ps.getBucket(topic)
+	return b.publish(&pubMessage{
+		topic: topic,
+		data:  msg,
+	})
 }
 
 // UnsubscribeTopic all subscribers from a specific topic
 func (ps *PubSub) UnsubscribeTopic(topic string) {
-	ps.mu.Lock()
-	defer ps.mu.Unlock()
-
-	if subs, ok := ps.topics[topic]; ok {
-		for sub := range subs {
-			sub.mu.Lock()
-			delete(sub.handlers, topic)
-			sub.mu.Unlock()
-		}
-		delete(ps.topics, topic)
-	}
+	b := ps.getBucket(topic)
+	b.unsubscribeTopic(topic)
 }
 
-// UnsubscribeAll all subscribers from all topics
-func (ps *PubSub) UnsubscribeAll() {
-	ps.mu.Lock()
-	defer ps.mu.Unlock()
+func (ps *PubSub) subscribe(s *Subscriber, topic string, handler HandlerFunc) {
+	b := ps.getBucket(topic)
+	b.subscribe(s, topic, handler)
+}
 
-	for topic, subs := range ps.topics {
-		for sub := range subs {
-			sub.mu.Lock()
-			delete(sub.handlers, topic)
-			sub.mu.Unlock()
-		}
-		delete(ps.topics, topic)
-	}
+func (ps *PubSub) unSubscribe(s *Subscriber, topic string) {
+	b := ps.getBucket(topic)
+	b.unSubscribe(s, topic)
 }

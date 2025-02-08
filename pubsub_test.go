@@ -7,8 +7,11 @@ import (
 )
 
 func TestPubSub(t *testing.T) {
-	ps := NewPubSub()
-	subscriber := ps.NewSubscriber(256)
+	ps := NewPubSub(&Config{
+		BucketNum:           16,
+		BucketMessageBuffer: 1024,
+	})
+	subscriber := ps.NewSubscriber()
 
 	var wg sync.WaitGroup
 	wg.Add(1)
@@ -22,7 +25,10 @@ func TestPubSub(t *testing.T) {
 		}
 	})
 
-	ps.Publish("topic1", []byte("Hello, Subscriber!"))
+	if err := ps.Publish("topic1", []byte("Hello, Subscriber!")); err != nil {
+		t.Error(err)
+		return
+	}
 
 	_ = waitWithTimeout(&wg, 1*time.Second)
 
@@ -35,7 +41,10 @@ func TestPubSub(t *testing.T) {
 	received = false
 	wg.Add(1)
 
-	ps.Publish("topic1", []byte("This should not be received"))
+	if err := ps.Publish("topic1", []byte("This should not be received")); err != nil {
+		t.Error(err)
+		return
+	}
 
 	if waitWithTimeout(&wg, 500*time.Millisecond) == nil {
 		t.Errorf("Expected not to receive message after unsubscribe")
@@ -50,7 +59,11 @@ func TestPubSub(t *testing.T) {
 
 	received = false
 	wg.Add(1)
-	ps.Publish("topic2", []byte("This should not be received"))
+
+	if err := ps.Publish("topic2", []byte("This should not be received")); err != nil {
+		t.Error(err)
+		return
+	}
 
 	if waitWithTimeout(&wg, 500*time.Millisecond) == nil {
 		t.Errorf("Expected not to receive message after UnsubscribeAll")
@@ -66,7 +79,11 @@ func TestPubSub(t *testing.T) {
 
 	received = false
 	wg.Add(1)
-	ps.Publish("topic3", []byte("This should not be received"))
+
+	if err := ps.Publish("topic3", []byte("This should not be received")); err != nil {
+		t.Error(err)
+		return
+	}
 
 	if waitWithTimeout(&wg, 500*time.Millisecond) == nil {
 		t.Errorf("Expected not to receive message after PubSub.UnsubscribeTopic")
@@ -78,11 +95,15 @@ func TestPubSub(t *testing.T) {
 		wg.Done()
 	})
 
-	ps.UnsubscribeAll()
+	subscriber.UnsubscribeAll()
 
 	received = false
 	wg.Add(1)
-	ps.Publish("topic4", []byte("This should not be received"))
+
+	if err := ps.Publish("topic4", []byte("This should not be received")); err != nil {
+		t.Error(err)
+		return
+	}
 
 	if waitWithTimeout(&wg, 500*time.Millisecond) == nil {
 		t.Errorf("Expected not to receive message after PubSub.UnsubscribeAll")

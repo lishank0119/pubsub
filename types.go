@@ -6,3 +6,8 @@ type message struct {
 	topic string
 	data  []byte
 }
+
+type pubMessage struct {
+	topic string
+	data  []byte
+}
