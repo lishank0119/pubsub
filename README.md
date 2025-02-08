@@ -21,7 +21,7 @@ go get github.com/lishank0119/pubsub
 
 ## ⚡ Usage
 
-### Import
+### Code
 
 ```go
 package main

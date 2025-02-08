@@ -18,7 +18,7 @@ go get github.com/lishank0119/pubsub
 
 ## ⚡ 使用方式
 
-### 匯入
+### 程式碼
 
 ```go
 package main
