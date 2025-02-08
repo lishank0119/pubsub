@@ -47,9 +47,9 @@ func (b *bucket) subscribe(s *Subscriber, topic string, handler HandlerFunc) {
 
 	if _, ok := b.topics[topic]; !ok {
 		b.topics[topic] = make(map[*Subscriber]HandlerFunc)
-		s.addTopic(topic)
 	}
 	b.topics[topic][s] = handler
+	s.addTopic(topic)
 }
 
 func (b *bucket) publish(msg *pubMessage) error {
