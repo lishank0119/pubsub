@@ -13,7 +13,7 @@
 ## 📦 安裝方式
 
 ```bash
-go get github.com/lishank0119/pubsub
+go get -u github.com/lishank0119/pubsub
 ```
 
 ## ⚡ 使用方式

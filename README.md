@@ -16,7 +16,7 @@ A lightweight internal **Publish/Subscribe (Pub/Sub)** system written in Go, des
 ## 📦 Installation
 
 ```bash
-go get github.com/lishank0119/pubsub
+go get -u github.com/lishank0119/pubsub
 ```
 
 ## ⚡ Usage
