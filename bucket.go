@@ -13,6 +13,28 @@ type bucket struct {
 	pubCh  chan *pubMessage
 }
 
+func (b *bucket) subscriberCount(topic string) int {
+	b.mu.RLock()
+	defer b.mu.RUnlock()
+
+	if subscribers, ok := b.topics[topic]; ok {
+		return len(subscribers)
+	}
+
+	return 0
+}
+
+func (b *bucket) listTopics() []string {
+	b.mu.RLock()
+	defer b.mu.RUnlock()
+
+	topics := make([]string, 0)
+	for topic := range b.topics {
+		topics = append(topics, topic)
+	}
+	return topics
+}
+
 // unsubscribeTopic all subscribers from a specific topic
 func (b *bucket) unsubscribeTopic(topic string) {
 	b.mu.Lock()

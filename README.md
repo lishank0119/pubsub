@@ -12,11 +12,21 @@ A lightweight internal **Publish/Subscribe (Pub/Sub)** system written in Go, des
 - **Efficient Message Handling:** Uses a centralized `publish message channel` for optimized message dispatch.
 - **Flexible Subscription Control:** Supports subscribing, unsubscribing from specific topics, and bulk unsubscription.
 - **Thread-Safe:** Built-in synchronization for concurrent operations.
+- **Topic Introspection:** Supports `ListTopics()` and `SubscriberCount()` for monitoring active topics.
 
 ## 📦 Installation
 
 ```bash
 go get -u github.com/lishank0119/pubsub
+```
+
+## 🔍 Topic Monitoring
+
+You can inspect current topics and subscriptions:
+
+```go
+topics := ps.ListTopics() // returns []string
+count := ps.SubscriberCount("news") // returns int
 ```
 
 ## ⚡ Usage
@@ -78,6 +88,8 @@ func Publish(ps *pubsub.PubSub) {
 
 
 ```
+
+
 
 ### Subscription Management
 

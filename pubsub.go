@@ -9,21 +9,18 @@ type PubSub struct {
 	buckets []*bucket
 }
 
-func NewPubSub(config *Config) *PubSub {
-	if config == nil {
-		config = new(Config)
-	}
-	config.init()
+func (ps *PubSub) SubscriberCount(topic string) int {
+	b := ps.getBucket(topic)
+	return b.subscriberCount(topic)
+}
 
-	buckets := make([]*bucket, 0)
-
-	for i := 0; i < config.BucketNum; i++ {
-		buckets = append(buckets, newBucket(config.BucketMessageBuffer))
+func (ps *PubSub) ListTopics() []string {
+	topics := make([]string, 0)
+	for _, b := range ps.buckets {
+		topics = append(topics, b.listTopics()...)
 	}
 
-	return &PubSub{
-		buckets: buckets,
-	}
+	return topics
 }
 
 func (ps *PubSub) getBucket(topic string) *bucket {
@@ -62,4 +59,21 @@ func (ps *PubSub) subscribe(s *Subscriber, topic string, handler HandlerFunc) {
 func (ps *PubSub) unSubscribe(s *Subscriber, topic string) {
 	b := ps.getBucket(topic)
 	b.unSubscribe(s, topic)
+}
+
+func NewPubSub(config *Config) *PubSub {
+	if config == nil {
+		config = new(Config)
+	}
+	config.init()
+
+	buckets := make([]*bucket, 0)
+
+	for i := 0; i < config.BucketNum; i++ {
+		buckets = append(buckets, newBucket(config.BucketMessageBuffer))
+	}
+
+	return &PubSub{
+		buckets: buckets,
+	}
 }

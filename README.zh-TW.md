@@ -1,4 +1,5 @@
 # PubSub 系統
+
 [English](README.md)
 
 一個用 Go 語言編寫的輕量級 **發佈/訂閱 (Pub/Sub)** 系統，專為高效訊息廣播與靈活的訂閱管理設計。
@@ -16,6 +17,16 @@
 go get -u github.com/lishank0119/pubsub
 ```
 
+```md
+## 🔍 主題監控
+
+你可以查看當前有哪些主題被訂閱，以及每個主題的訂閱數：
+
+```go
+topics := ps.ListTopics() // 回傳所有有訂閱者的主題
+count := ps.SubscriberCount("topic_name") // 回傳該主題下的訂閱數量
+```
+
 ## ⚡ 使用方式
 
 ### 程式碼
@@ -24,53 +35,53 @@ go get -u github.com/lishank0119/pubsub
 package main
 
 import (
-  "fmt"
-  "github.com/lishank0119/pubsub"
-  "time"
+	"fmt"
+	"github.com/lishank0119/pubsub"
+	"time"
 )
 
 func main() {
-  ps := pubsub.NewPubSub(nil)
-  subscriber := ps.NewSubscriber()
+	ps := pubsub.NewPubSub(nil)
+	subscriber := ps.NewSubscriber()
 
-  go Publish(ps)
+	go Publish(ps)
 
-  subscriber.Subscribe("news", func(msg []byte) {
-    fmt.Println("Received:", string(msg))
-  })
+	subscriber.Subscribe("news", func(msg []byte) {
+		fmt.Println("Received:", string(msg))
+	})
 
-  subscriber.Subscribe("news:2", func(msg []byte) {
-    fmt.Println("Received(2):", string(msg))
-  })
+	subscriber.Subscribe("news:2", func(msg []byte) {
+		fmt.Println("Received(2):", string(msg))
+	})
 
-  time.Sleep(1500 * time.Millisecond)
+	time.Sleep(1500 * time.Millisecond)
 
-  subscriber.Unsubscribe("news:2")
+	subscriber.Unsubscribe("news:2")
 
-  time.Sleep(1 * time.Second)
+	time.Sleep(1 * time.Second)
 
-  subscriber.UnsubscribeAll()
+	subscriber.UnsubscribeAll()
 
-  select {}
+	select {}
 }
 
 func Publish(ps *pubsub.PubSub) {
-  IntervalTime := 1 * time.Second
-  ticker := time.NewTicker(IntervalTime)
-  for {
-    select {
-    case <-ticker.C:
-      if err := ps.Publish("news", []byte("Hello, PubSub World!")); err != nil {
-        panic(err)
-        return
-      }
+	IntervalTime := 1 * time.Second
+	ticker := time.NewTicker(IntervalTime)
+	for {
+		select {
+		case <-ticker.C:
+			if err := ps.Publish("news", []byte("Hello, PubSub World!")); err != nil {
+				panic(err)
+				return
+			}
 
-      if err := ps.Publish("news:2", []byte("Hello, PubSub World!(2)")); err != nil {
-        panic(err)
-        return
-      }
-    }
-  }
+			if err := ps.Publish("news:2", []byte("Hello, PubSub World!(2)")); err != nil {
+				panic(err)
+				return
+			}
+		}
+	}
 }
 
 ```
